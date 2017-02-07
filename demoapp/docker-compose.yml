@@ -1,0 +1,92 @@
+version: '3'
+
+networks:
+    demo:
+
+volumes:
+    redis-cache:
+    database-data:
+
+services:
+
+    web:
+        image: wfsilva/nginx-php7-completo
+        build:
+            context: ./containers
+            dockerfile: web-Dockerfile
+        volumes:
+            - ./:/app
+            - ./containers/config-files/supervisor.nginx.conf:/etc/supervisor/conf.d/nginx.conf
+            - ./containers/config-files/supervisor.core.conf:/etc/supervisor/conf.d/core.conf
+            - ./containers/config-files/supervisor.php-fpm.conf:/etc/supervisor/conf.d/php-fpm.conf
+            - ./containers/config-files/default.conf:/etc/nginx/sites-enabled/default
+            - ./containers/config-files/www.conf:/etc/php/7.0/fpm/pool.d/www.conf
+            - ./containers/config-files/php.cli.ini:/etc/php/7.0/cli/php.ini
+            - ./containers/config-files/php.fpm.ini:/etc/php/7.0/fpm/php.ini
+        depends_on: 
+            - database
+            - cache
+            - queue
+        ports:
+            - "80:80"
+        command: ["/usr/bin/supervisord", "-n"]
+        networks: 
+            demo:
+    
+    consumer:
+        image: wfsilva/python-consumer
+        build:
+            context: ./containers
+            dockerfile: consumer-Dockerfile
+        volumes:
+            - .:/app
+        working_dir: /app
+        depends_on: 
+            - queue
+        command: ["python", "-u", "consumer.py"]
+        networks: 
+            - demo
+    
+    database:
+        image: mysql:5.6
+        container_name: demoapp_database
+        ports:
+            - "3306:3306"
+        volumes:
+            - database-data:/var/lib/mysql
+        environment:
+            - "MYSQL_ROOT_PASSWORD=root"
+            - "MYSQL_DATABASE=demoapp"
+            - "MYSQL_USER=demoapp"
+            - "MYSQL_PASSWORD=demoapp"
+        networks: 
+            - demo
+        deploy:
+            placement:
+                constraints: [node.role == manager]
+
+    cache:
+        image: redis:2.8.23
+        container_name: demoapp_cache
+        volumes:
+            - redis-cache:/data
+        ports:
+            - "6379:6379"
+        networks: 
+            - demo
+        command: ["redis-server", "--appendonly", "yes"]
+        deploy:
+            placement:
+                constraints: [node.role == manager]
+    
+    queue: 
+        image: rabbitmq:3.6-management
+        container_name: demoapp_queue
+        ports:
+            - "15672:15672"
+            - "5672:5672"
+        environment:
+            - "RABBITMQ_DEFAULT_USER=demoapp"
+            - "RABBITMQ_DEFAULT_PASS=demoapp"
+        networks: 
+            - demo
