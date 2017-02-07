@@ -20,7 +20,7 @@ def callback(ch, method, properties, body):
     # print(" [x] Received %r" % body)
     jsonbody = json.loads(body)
     print(" [-] Novo e-mail cadastrado: %s" % jsonbody['data']['novo-email'])
-    cache.incr('qtdeSubscribed')
+    cache.incr('laravel:qtdeSubscribed')
 
 channel.basic_consume(callback, queue='demoapp', no_ack=True)
 
