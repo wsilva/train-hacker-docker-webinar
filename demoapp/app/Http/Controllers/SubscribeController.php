@@ -5,6 +5,9 @@ namespace App\Http\Controllers;
 use Session;
 use Cache;
 use Queue;
+use Request;
+use App\Email;
+use App\Http\Requests;
 
 class SubscribeController extends Controller 
 {
