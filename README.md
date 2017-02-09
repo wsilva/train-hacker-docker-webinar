@@ -56,7 +56,34 @@ Primeriramente utilize o seguinte comando para autenticar no Docker Hub pela lin
 Em seguida na mesma pasta utilizamos o comando abaixo para enviar todas as imagens de uma vez:
 
 	$ docker-compose push
+
+Vamos alterar a versão das imagens para v2 e no arquivo *demoapp/resources/views/pages/subscribe.blade.php* vamos alterar o header 1 n linh 9 da página de *V1* para *V2*.
+
+	<h1>DEMOAPP (V1)</h1>
+
+para 
+
+	<h1>DEMOAPP (V2)</h1>
 	
+E de
+
+	...
+    image: seu-nome-de-usuario-no-docker-hub/train-hacker-webinar-web:v1
+    ...
+    image: seu-nome-de-usuario-no-docker-hub/train-hacker-webinar-consumer:v1
+    ...
+    
+para
+
+	...
+    image: seu-nome-de-usuario-no-docker-hub/train-hacker-webinar-web:v2
+    ...
+    image: seu-nome-de-usuario-no-docker-hub/train-hacker-webinar-consumer:v2
+    ...
+
+Vamos regerar e reenviar as imagens ao Docker Hub:
+
+	$ docker-compose build && docker-compose push
 
 ### Subindo a stack localmente
 
