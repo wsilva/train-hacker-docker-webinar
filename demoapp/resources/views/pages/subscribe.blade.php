@@ -6,7 +6,7 @@ Subscribe
 
 @section('content')
 
-<h1>DEMOAPP</h1>
+<h1>DEMOAPP (V1)</h1>
 <hr>
 
 <div class="container">
