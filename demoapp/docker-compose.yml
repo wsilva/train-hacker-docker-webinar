@@ -10,19 +10,12 @@ volumes:
 services:
 
     web:
-        image: wfsilva/nginx-php7-completo
+        image: wfsilva/train-hacker-webinar-web:v1
         build:
-            context: ./containers
-            dockerfile: web-Dockerfile
-        volumes:
-            - ./:/app
-            - ./containers/config-files/supervisor.nginx.conf:/etc/supervisor/conf.d/nginx.conf
-            - ./containers/config-files/supervisor.core.conf:/etc/supervisor/conf.d/core.conf
-            - ./containers/config-files/supervisor.php-fpm.conf:/etc/supervisor/conf.d/php-fpm.conf
-            - ./containers/config-files/default.conf:/etc/nginx/sites-enabled/default
-            - ./containers/config-files/www.conf:/etc/php/7.0/fpm/pool.d/www.conf
-            - ./containers/config-files/php.cli.ini:/etc/php/7.0/cli/php.ini
-            - ./containers/config-files/php.fpm.ini:/etc/php/7.0/fpm/php.ini
+            context: ./
+            dockerfile: Dockerfile-web
+        # volumes:
+        #     - ./:/app
         depends_on: 
             - database
             - cache
@@ -31,21 +24,45 @@ services:
             - "80:80"
         command: ["/usr/bin/supervisord", "-n"]
         networks: 
-            demo:
+            - demo  
+        deploy:
+            mode: replicated
+            replicas: 2
+            labels: [APP=WEB]
+            update_config:
+                parallelism: 1
+                delay: 10s
+                failure_action: continue
+                monitor: 60s
+                max_failure_ratio: 0.3
+            placement:
+                constraints: [node.role == worker]
     
     consumer:
-        image: wfsilva/python-consumer
+        image: wfsilva/train-hacker-webinar-consumer:v1
         build:
-            context: ./containers
-            dockerfile: consumer-Dockerfile
-        volumes:
-            - .:/app
+            context: ./
+            dockerfile: Dockerfile-consumer
+        # volumes:
+        #     - .:/app
         working_dir: /app
         depends_on: 
             - queue
         command: ["python", "-u", "consumer.py"]
         networks: 
-            - demo
+            - demo 
+        deploy:
+            mode: replicated
+            replicas: 2
+            labels: [APP=WEB]
+            update_config:
+                parallelism: 1
+                delay: 10s
+                failure_action: continue
+                monitor: 60s
+                max_failure_ratio: 0.3
+            placement:
+                constraints: [node.role == worker]
     
     database:
         image: mysql:5.6

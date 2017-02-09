@@ -21,6 +21,21 @@ RUN apt-get update \
     && mv composer.phar /usr/bin/composer \
     && rm -r /var/lib/apt/lists/*
 
+COPY ./containers/config-files/php.cli.ini /etc/php/7.0/cli/php.ini
+COPY ./containers/config-files/php.fpm.ini /etc/php/7.0/fpm/php.ini
+
+COPY ./containers/config-files/nginx.conf /etc/nginx/nginx.conf
+COPY ./containers/config-files/default.conf /etc/nginx/sites-enabled/default
+
+COPY ./containers/config-files/www.conf /etc/php/7.0/fpm/pool.d/www.conf
+
+COPY ./containers/config-files/supervisor.nginx.conf /etc/supervisor/conf.d/nginx.conf
+COPY ./containers/config-files/supervisor.core.conf /etc/supervisor/conf.d/core.conf
+COPY ./containers/config-files/supervisor.php-fpm.conf /etc/supervisor/conf.d/php-fpm.conf
+
+
+COPY . /app/
+RUN chown www-data:www-data -R /app/
 
 EXPOSE 80 443
 
